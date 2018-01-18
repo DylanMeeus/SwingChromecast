@@ -1,7 +1,7 @@
-package views;
+package pm;
 
 /**
  * Created by dylan on 18.01.18.
  */
-public class HomeView {
+public class ChromeListPM {
 }
