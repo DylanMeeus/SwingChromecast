@@ -1,40 +1,36 @@
 package views;
 
+import beans.ChromeListBean;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import pm.ChromeListPM;
+import pm.PM;
 import services.DefaultChromecastService;
 import services.MockChromecastService;
 import su.litvak.chromecast.api.v2.ChromeCast;
 import views.components.ChromecastCellRenderer;
 
+import com.jgoodies.binding.*;
 import javax.swing.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
+import java.util.Objects;
 import java.util.TimerTask;
 import java.util.Timer;
 
 /**
  * Created by dylan on 14.01.18.
  */
-public class HomeView implements View{
+public class ChromeListView implements View {
 
     private JPanel mainPanel;
     private JList<ChromeCast> chromeCastList;
+    private PM chromeListPM = new ChromeListPM();
 
-    private Timer timer;
-    public HomeView(){
+    public ChromeListView(){
         setupGui();
-        TimerTask task = new TimerTask(){
-            @Override
-            public void run() {
-                List<ChromeCast> chromecasts = DefaultChromecastService.getChromecastService().getChromecasts();
-                // once we have found some chromecasts, stop reloading and let the user handle refreshes?
-                if (!chromecasts.isEmpty()) {
-                    populateJList(chromecasts);
-                    timer.cancel();
-                }
-            }
-        };
-        timer = new Timer("serviceTimer");
-        timer.scheduleAtFixedRate(task, 0, 5000);
+        setupListeners();
     }
 
     private void setupGui(){
@@ -42,6 +38,22 @@ public class HomeView implements View{
         chromeCastList = new JList<ChromeCast>();
         chromeCastList.setCellRenderer(new ChromecastCellRenderer());
         mainPanel.add(chromeCastList);
+    }
+
+    private void setupListeners(){
+        chromeListPM.getBean().addPropertyChangeListener(ChromeListBean.CHROMECAST_PROPERTY, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+                Object newValue = propertyChangeEvent.getNewValue();
+                if (!(newValue instanceof List)) {
+                    return;
+                }
+                List<ChromeCast> chromeCasts = (List<ChromeCast>) newValue;
+                chromeCastList.setModel(new DefaultListModel<ChromeCast>(){{
+                    chromeCasts.forEach(cc -> addElement(cc));}});
+            }
+        });
+
     }
 
     private void populateJList(List<ChromeCast> chromecasts) {
@@ -56,9 +68,16 @@ public class HomeView implements View{
 
 
 
+
     @Override
     @NotNull
     public JComponent getGui() {
         return mainPanel;
+    }
+
+    @Nullable
+    @Override
+    public PM getPM() {
+        return chromeListPM;
     }
 }

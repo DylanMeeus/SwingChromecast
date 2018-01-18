@@ -5,7 +5,6 @@ import su.litvak.chromecast.api.v2.ChromeCast;
 import su.litvak.chromecast.api.v2.ChromeCasts;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 /**
