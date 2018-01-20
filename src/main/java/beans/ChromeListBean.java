@@ -1,11 +1,13 @@
 package beans;
 
 import com.jgoodies.binding.beans.Model;
-import org.jetbrains.annotations.NotNull;
+import com.jgoodies.binding.list.SelectionInList;
+import com.jgoodies.binding.value.ValueModel;
 import services.DefaultChromecastService;
 import su.litvak.chromecast.api.v2.ChromeCast;
 
-import java.util.ArrayList;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -16,9 +18,10 @@ import java.util.TimerTask;
  */
 public class ChromeListBean extends Model{
 
-    private List<ChromeCast> chromeCasts;
-    public static final String CHROMECAST_PROPERTY = "chromeCasts";
+    private SelectionInList chromeCastList = new SelectionInList();
     private Timer timer;
+    private ChromeCast selectedChromeCast;
+    public static final String LIST_SELECTION = "chromeListSelection";
     public ChromeListBean(){
         TimerTask task = new TimerTask(){
             @Override
@@ -27,22 +30,25 @@ public class ChromeListBean extends Model{
                 // once we have found some chromecasts, stop reloading and let the user handle refreshes?
                 if (!chromecasts.isEmpty()) {
                     timer.cancel();
-                    setChromeCasts(chromecasts);
+                    chromeCastList.setList(chromecasts);
                 }
             }
         };
         timer = new Timer("serviceTimer");
         timer.scheduleAtFixedRate(task, 0, 5000);
+
+        chromeCastList.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+                ChromeCast oldChromeCast = selectedChromeCast;
+                selectedChromeCast = (ChromeCast) chromeCastList.getSelection();
+                firePropertyChange(LIST_SELECTION, oldChromeCast, selectedChromeCast);
+            }
+        });
     }
 
-    public void setChromeCasts(@NotNull List<ChromeCast> casts) {
-        List<ChromeCast> oldValue = new ArrayList<ChromeCast>(){{
-            if (chromeCasts != null) {
-                addAll(chromeCasts);
-            }
-        }};
-        chromeCasts = casts;
-        firePropertyChange(CHROMECAST_PROPERTY, oldValue, chromeCasts);
+    public SelectionInList getChromecastList() {
+        return chromeCastList;
     }
 
 }

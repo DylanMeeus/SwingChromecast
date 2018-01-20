@@ -1,6 +1,7 @@
 package views;
 
 import beans.ChromeListBean;
+import com.jgoodies.binding.adapter.Bindings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pm.ChromeListPM;
@@ -41,32 +42,16 @@ public class ChromeListView implements View {
     }
 
     private void setupListeners(){
-        chromeListPM.getBean().addPropertyChangeListener(ChromeListBean.CHROMECAST_PROPERTY, new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-                Object newValue = propertyChangeEvent.getNewValue();
-                if (!(newValue instanceof List)) {
-                    return;
-                }
-                List<ChromeCast> chromeCasts = (List<ChromeCast>) newValue;
-                chromeCastList.setModel(new DefaultListModel<ChromeCast>(){{
-                    chromeCasts.forEach(cc -> addElement(cc));}});
-            }
-        });
-
+        Bindings.bind(chromeCastList, ((ChromeListBean)getPM().getBean()).getChromecastList());
     }
 
     private void populateJList(List<ChromeCast> chromecasts) {
+        System.out.println(String.format("Found %d chromecasts", chromecasts.size()));
         final DefaultListModel<ChromeCast> listModel = new DefaultListModel<ChromeCast>();
-        System.out.println("chromecasts: " + chromecasts.size());
         chromecasts.forEach(c -> listModel.addElement(c));
         chromeCastList.setModel(listModel);
         mainPanel.revalidate();
     }
-
-
-
-
 
 
     @Override

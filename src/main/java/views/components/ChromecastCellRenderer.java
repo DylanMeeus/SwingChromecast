@@ -26,7 +26,7 @@ public class ChromecastCellRenderer extends JPanel implements ListCellRenderer<C
             this.setBackground(unselectedColour);
         }
 
-        JLabel nameLabel = new JLabel(chromeCast.getName());
+        JLabel nameLabel = new JLabel(chromeCast.getTitle());
         this.add(nameLabel);
 
         return this;

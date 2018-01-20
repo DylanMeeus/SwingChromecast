@@ -1,10 +1,16 @@
 package views;
 
+import beans.DetailBean;
+import com.jgoodies.binding.adapter.Bindings;
+import com.jgoodies.binding.value.ValueModel;
 import org.jetbrains.annotations.NotNull;
 import pm.DetailPM;
 import pm.PM;
+import su.litvak.chromecast.api.v2.ChromeCast;
 
 import javax.swing.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 /**
  * Created by dylan on 18.01.18.
@@ -12,15 +18,26 @@ import javax.swing.*;
 public class DetailView implements View{
 
     private JPanel mainPanel;
-    private PM pm = new DetailPM();
+    private DetailPM pm = new DetailPM();
+    private JLabel titleLabel = new JLabel();
 
     public DetailView(){
         setupGui();
+        setupListeners();
     }
 
     private void setupGui(){
         mainPanel = new JPanel();
-        mainPanel.add(new JLabel("Test"));
+        mainPanel.add(titleLabel);
+    }
+
+    public void setupListeners(){
+        pm.getBean().addPropertyChangeListener(DetailBean.CHROMECAST, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+                titleLabel.setText(((ChromeCast)propertyChangeEvent.getNewValue()).getTitle());
+            }
+        });
     }
 
     @NotNull
@@ -30,7 +47,7 @@ public class DetailView implements View{
     }
 
     @Override
-    public PM getPM(){
+    public DetailPM getPM(){
         return pm;
     }
 }
