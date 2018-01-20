@@ -15,8 +15,12 @@ public class DetailPM implements PM{
         bean.setChromeCast(cast);
     }
 
+    public ChromeCast getCurrentChromeCast(){
+        return bean.getChromeCast();
+    }
+
     @Override
-    public Model getBean() {
+    public DetailBean getBean() {
         return bean;
     }
 }
