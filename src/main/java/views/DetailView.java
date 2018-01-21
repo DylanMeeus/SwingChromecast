@@ -6,8 +6,11 @@ import org.jetbrains.annotations.NotNull;
 import pm.DetailPM;
 import su.litvak.chromecast.api.v2.ChromeCast;
 import su.litvak.chromecast.api.v2.MediaStatus;
+import su.litvak.chromecast.api.v2.Volume;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -25,6 +28,7 @@ public class DetailView implements View {
 
     private JPanel mainPanel;
     private JPanel controlPanel;
+    private JSlider volumeSlider;
 
     private DetailPM pm = new DetailPM();
 
@@ -67,7 +71,7 @@ public class DetailView implements View {
 
     private JPanel createControlPanel() {
         JPanel controls = new JPanel();
-        controls.setLayout(new MigLayout(""));
+        controls.setLayout(new MigLayout("debug"));
         playPauseButton = new JButton();
         playPauseButton.addActionListener(new ActionListener() {
             @Override
@@ -89,8 +93,18 @@ public class DetailView implements View {
         stopAppButton = new JButton();
         stopAppButton.setToolTipText("Terminates the currently running application");
         stopAppButton.setAction(new TerminateAppAction());
+
+        // jslider for volume
+        volumeSlider = new JSlider(SwingConstants.HORIZONTAL);
+        volumeSlider.addChangeListener(new VolumeChangeListener());
+
+
         controls.add(playPauseButton);
         controls.add(stopAppButton);
+        controls.add(volumeSlider);
+
+
+
         return controls;
     }
 
@@ -114,28 +128,39 @@ public class DetailView implements View {
     private void updateUI(ChromeCast chromeCast) {
         try {
             Objects.requireNonNull(chromeCast);
-            titleLabel.setText(chromeCast.getTitle());
-            addressLabel.setText(chromeCast.getAddress());
-            nameLabel.setText(chromeCast.getName());
-            appTitleLabel.setText(chromeCast.getStatus().getRunningApp().name);
-
-            // Set state from the play / stop button
-            boolean idling = chromeCast.getRunningApp().isIdleScreen;
-            if (!idling) {
-                playPauseButton.setEnabled(true);
-                MediaStatus.PlayerState playerState = chromeCast.getMediaStatus().playerState;
-                if (playerState == MediaStatus.PlayerState.PAUSED) {
-                    playPauseButton.setText(PLAY);
-                } else if (playerState == MediaStatus.PlayerState.PLAYING) {
-                    playPauseButton.setText(PAUSE);
-                }
-            } else {
-                // todo: different way to indicate that nothing is running?
-                playPauseButton.setEnabled(false);
-            }
+            updateChromecastData(chromeCast);
+            updateControls(chromeCast);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+    }
+
+    private void updateChromecastData(ChromeCast chromeCast) throws IOException {
+        titleLabel.setText(chromeCast.getTitle());
+        addressLabel.setText(chromeCast.getAddress());
+        nameLabel.setText(chromeCast.getName());
+        appTitleLabel.setText(chromeCast.getStatus().getRunningApp().name);
+    }
+
+    private void updateControls(ChromeCast chromeCast) throws IOException {
+        boolean idling = chromeCast.getRunningApp().isIdleScreen;
+        if (!idling) {
+            playPauseButton.setEnabled(true);
+            MediaStatus.PlayerState playerState = chromeCast.getMediaStatus().playerState;
+            if (playerState == MediaStatus.PlayerState.PAUSED) {
+                playPauseButton.setText(PLAY);
+            } else if (playerState == MediaStatus.PlayerState.PLAYING) {
+                playPauseButton.setText(PAUSE);
+            }
+        } else {
+            // todo: different way to indicate that nothing is running?
+            playPauseButton.setEnabled(false);
+        }
+
+        // volume slider
+        Volume volume = chromeCast.getStatus().volume;
+        int volumeLevel = (int) (volume.level * 100);
+        volumeSlider.setValue(volumeLevel);
     }
 
     @NotNull
@@ -168,6 +193,24 @@ public class DetailView implements View {
                 currentChromeCast.stopApp();
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private class VolumeChangeListener implements ChangeListener{
+
+        @Override
+        public void stateChanged(ChangeEvent changeEvent) {
+            System.out.println("Changed to: " + volumeSlider.getValue());
+            ChromeCast chromeCast = getPM().getCurrentChromeCast();
+            if (chromeCast == null) {
+                return;
+            }
+            try{
+                float volumeLevel = ((float)volumeSlider.getValue()) / 100;
+                chromeCast.setVolume(volumeLevel);
+            } catch(Exception ex){
+                ex.printStackTrace();
             }
         }
     }
