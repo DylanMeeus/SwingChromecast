@@ -9,10 +9,10 @@ import su.litvak.chromecast.api.v2.MediaStatus;
 import su.litvak.chromecast.api.v2.Volume;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
@@ -51,27 +51,29 @@ public class DetailView implements View {
     }
 
     private void setupGui() {
-        mainPanel = new JPanel(new MigLayout("wrap 2"));
+        mainPanel = new JPanel(new MigLayout("wrap"));
 
-        mainPanel.add(new JLabel("Title: "));
-        mainPanel.add(titleLabel);
+        JPanel infoPanel = new JPanel(new MigLayout("wrap 2"));
+        infoPanel.add(new JLabel("Title: "));
+        infoPanel.add(titleLabel);
 
-        mainPanel.add(new JLabel("Address: "));
-        mainPanel.add(addressLabel);
+        infoPanel.add(new JLabel("Address: "));
+        infoPanel.add(addressLabel);
 
-        mainPanel.add(new JLabel("Name: "));
-        mainPanel.add(nameLabel);
+        infoPanel.add(new JLabel("Name: "));
+        infoPanel.add(nameLabel);
 
-        mainPanel.add(new JLabel("Application: "));
-        mainPanel.add(appTitleLabel);
+        infoPanel.add(new JLabel("Application: "));
+        infoPanel.add(appTitleLabel);
 
         controlPanel = createControlPanel();
-        mainPanel.add(controlPanel, "wrap");
+        mainPanel.add(infoPanel);
+        mainPanel.add(controlPanel);
     }
 
     private JPanel createControlPanel() {
         JPanel controls = new JPanel();
-        controls.setLayout(new MigLayout("debug"));
+        controls.setLayout(new MigLayout("wrap 2"));
         playPauseButton = new JButton();
         playPauseButton.addActionListener(new ActionListener() {
             @Override
@@ -96,15 +98,13 @@ public class DetailView implements View {
 
         // jslider for volume
         volumeSlider = new JSlider(SwingConstants.HORIZONTAL);
-        volumeSlider.addChangeListener(new VolumeChangeListener());
+        //volumeSlider.addChangeListener(new VolumeChangeListener());
+        volumeSlider.addMouseListener(new VolumeChangeListener());
 
-
+        controls.add(new JLabel("Volume:"));
+        controls.add(volumeSlider);
         controls.add(playPauseButton);
         controls.add(stopAppButton);
-        controls.add(volumeSlider);
-
-
-
         return controls;
     }
 
@@ -197,23 +197,20 @@ public class DetailView implements View {
         }
     }
 
-    private class VolumeChangeListener implements ChangeListener{
+    private class VolumeChangeListener extends MouseAdapter {
 
         @Override
-        public void stateChanged(ChangeEvent changeEvent) {
-            System.out.println("Changed to: " + volumeSlider.getValue());
+        public void mouseReleased(MouseEvent mouseEvent) {
             ChromeCast chromeCast = getPM().getCurrentChromeCast();
             if (chromeCast == null) {
                 return;
             }
-            try{
-                float volumeLevel = ((float)volumeSlider.getValue()) / 100;
+            try {
+                float volumeLevel = ((float) volumeSlider.getValue()) / 100;
                 chromeCast.setVolume(volumeLevel);
-            } catch(Exception ex){
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     }
-
-
 }
