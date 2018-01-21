@@ -39,8 +39,14 @@ public class DetailBean extends Model {
                     if (!status.equals(prevStatus)) {
                         setCastStatus(status);
                     }
-                } catch(Exception ex){
-                    ex.printStackTrace();
+                } catch (NullPointerException npe) {
+                    // todo: avoid trigger chromecast npes!
+                    if (chromeCast == null) {
+                        return;
+                    }
+                    npe.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         };
