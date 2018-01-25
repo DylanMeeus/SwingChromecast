@@ -16,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Objects;
 
 /**
@@ -25,6 +26,8 @@ public class DetailView implements View {
 
     private JButton playPauseButton;
     private JButton stopAppButton;
+    private JButton loadButton; // load media
+    private JButton urlButton;
 
     private JPanel mainPanel;
     private JPanel controlPanel;
@@ -44,6 +47,9 @@ public class DetailView implements View {
     private static final String PLAY = "Play";
     private static final String PAUSE = "Pause";
     private static final String QUIT = "Quit";
+    private static final String LOAD_FILE = "File";
+    private static final String LOAD_URL = "URL";
+    private static final String DEFAULT_MEDIA_PLAYER_APP = "CC1AD845";
 
     public DetailView() {
         setupGui();
@@ -85,7 +91,6 @@ public class DetailView implements View {
                 try {
                     MediaStatus mediaStatus = currentChromeCast.getMediaStatus();
                     MediaStatus.PlayerState playerState = mediaStatus.playerState;
-                    System.out.println(playerState);
                     currentChromeCast.pause();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -96,13 +101,25 @@ public class DetailView implements View {
         stopAppButton.setToolTipText("Terminates the currently running application");
         stopAppButton.setAction(new TerminateAppAction());
 
-        // jslider for volume
+        loadButton = new JButton("FILE");
+        loadButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                ChromeCast currentCast = getPM().getCurrentChromeCast();
+            }
+        });
+
+        urlButton = new JButton("URL");
+        urlButton.setAction(new LoadURLAction());
+
+        // add a 'mute' button next to the slider
         volumeSlider = new JSlider(SwingConstants.HORIZONTAL);
-        //volumeSlider.addChangeListener(new VolumeChangeListener());
         volumeSlider.addMouseListener(new VolumeChangeListener());
 
         controls.add(new JLabel("Volume:"));
         controls.add(volumeSlider);
+        controls.add(loadButton);
+        controls.add(urlButton);
         controls.add(playPauseButton);
         controls.add(stopAppButton);
         return controls;
@@ -213,4 +230,39 @@ public class DetailView implements View {
             }
         }
     }
+
+    private class LoadURLAction extends AbstractAction {
+
+        public LoadURLAction(){
+            putValue(NAME, LOAD_URL);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            String result = JOptionPane.showInputDialog(new JLabel("URL"));
+            if (result != null && !result.isEmpty()) {
+                ChromeCast chromeCast = getPM().getCurrentChromeCast();
+                if (chromeCast == null) {
+                    return;
+                }
+                try {
+                    chromeCast.connect();
+                    System.out.println("connected");
+                    chromeCast.launchApp("CC1AD845");
+                    System.out.println("Launched app");
+                    chromeCast.load("Big Buck Bunny",           // Media title
+                            "",  // URL to thumbnail based on media URL
+                            "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // media URL
+                            null // media content type (optional, will be discovered automatically)
+                    );
+                    chromeCast.play();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (GeneralSecurityException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 }
