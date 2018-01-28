@@ -15,7 +15,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.Objects;
 
@@ -101,13 +103,7 @@ public class DetailView implements View {
         stopAppButton.setToolTipText("Terminates the currently running application");
         stopAppButton.setAction(new TerminateAppAction());
 
-        loadButton = new JButton("FILE");
-        loadButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                ChromeCast currentCast = getPM().getCurrentChromeCast();
-            }
-        });
+        loadButton = new JButton(new LoadFileAction());
 
         urlButton = new JButton("URL");
         urlButton.setAction(new LoadURLAction());
@@ -163,6 +159,9 @@ public class DetailView implements View {
         boolean idling = chromeCast.getRunningApp().isIdleScreen;
         if (!idling) {
             playPauseButton.setEnabled(true);
+            if (chromeCast.getMediaStatus() == null) {
+                return;
+            }
             MediaStatus.PlayerState playerState = chromeCast.getMediaStatus().playerState;
             if (playerState == MediaStatus.PlayerState.PAUSED) {
                 playPauseButton.setText(PLAY);
@@ -231,6 +230,28 @@ public class DetailView implements View {
         }
     }
 
+
+    private class LoadFileAction extends AbstractAction{
+
+        public LoadFileAction(){
+            putValue(NAME, LOAD_FILE);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            System.out.println("Hello World");
+            // select a file
+            File movieFile = Paths.get("/home/dylan/Streaming/movies/atomic/Atomic.Blonde.2017.1080p.BluRay.x264-[YTS.AG].mp4").toFile();
+            boolean testing = true;
+            if (!testing) {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.showOpenDialog(null);
+                File selectedFile = fileChooser.getSelectedFile();
+            }
+            pm.playMovieFromFile(movieFile);
+        }
+    }
+
     private class LoadURLAction extends AbstractAction {
 
         public LoadURLAction(){
@@ -247,9 +268,7 @@ public class DetailView implements View {
                 }
                 try {
                     chromeCast.connect();
-                    System.out.println("connected");
                     chromeCast.launchApp("CC1AD845");
-                    System.out.println("Launched app");
                     chromeCast.load("Big Buck Bunny",           // Media title
                             "",  // URL to thumbnail based on media URL
                             "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // media URL
