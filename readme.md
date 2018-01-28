@@ -1,4 +1,4 @@
-SwingChromecast
+SwingChromecast [![Build Status](https://travis-ci.org/DylanMeeus/SwingChromecast.svg?branch=master)](https://travis-ci.org/DylanMeeus/SwingChromecast)
 ===============
 
 Swing client to interact with your chromecasts.
